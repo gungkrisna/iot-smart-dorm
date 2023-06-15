@@ -1,18 +1,12 @@
 import { Redirect, Stack, useRouter } from "expo-router";
 import { Button, Pressable, Text, TouchableOpacity, View } from "react-native";
-import { AuthStore, appSignOut } from "../../../store";
+import { AuthStore, appSignOut } from "../../store/auth";
 
 const Tab2Index = () => {
   const router = useRouter();
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Stack.Screen options={{ headerShown: true, title: "Settings" }} />
-      {/* <Text style={{ fontFamily: "EncodeSansSemiCondensed_100Thin" }}>
-        EncodeSansSemiCondensed_100Thin
-      </Text>
-      <Text style={{ fontFamily: "EncodeSansSemiCondensed_300Light" }}>
-        EncodeSansSemiCondensed_300Light
-      </Text> */}
       <Text style={{ fontFamily: "EncodeSansSemiCondensed_400Regular" }}>
         {AuthStore.getRawState().user?.email}
       </Text>
@@ -26,7 +20,7 @@ const Tab2Index = () => {
             router.replace("/(auth)/login");
           } else {
             console.log(resp.error);
-            Alert.alert("Logout Error", resp.error?.message);
+            alert("Logout Error", resp.error?.message);
           }
         }}
         title="LOGOUT"

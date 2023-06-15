@@ -1,6 +1,6 @@
 import { Text, View, TextInput, StyleSheet, Alert } from "react-native";
-import { AuthStore, appSignIn } from "../../store.js";
-import { Stack, useRouter } from "expo-router";
+import { AuthStore, appSignIn } from "../../store/auth";
+import { useRouter } from "expo-router";
 import { useRef } from "react";
 
 export default function LogIn() {

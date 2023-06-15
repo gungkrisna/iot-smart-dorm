@@ -1,8 +1,8 @@
-import { useRootNavigationState } from "expo-router";
-import { useRouter, useSegments } from "expo-router";
-import { AuthStore, initStore } from "../store";
-import React, { useState } from "react";
+import { useRootNavigationState, useRouter, useSegments } from "expo-router";
+import { AuthStore } from "../store/firebase";
+import React, { useEffect } from "react";
 import { Text, View } from "react-native";
+
 
 const Index = () => {
 
@@ -13,8 +13,10 @@ const Index = () => {
 
   const { initialized, isLoggedIn } = AuthStore.useState();
 
-  React.useEffect(() => {
+
+  useEffect(() => {
     if (!navigationState?.key || !initialized) return;
+    //retrieveUserDevice();
 
     const inAuthGroup = segments[0] === "(auth)";
 
@@ -32,6 +34,9 @@ const Index = () => {
     }
   }, [segments, navigationState?.key, initialized]);
 
-  return <View>{!navigationState?.key ? <Text>LOADING...</Text> : <></>}</View>;
+
+  return (
+      <View>{!navigationState?.key ? <Text>Loading...</Text> : <></>}</View>
+  );
 };
 export default Index;

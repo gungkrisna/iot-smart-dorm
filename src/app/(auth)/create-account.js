@@ -1,7 +1,8 @@
-import { Text, View, TextInput, StyleSheet, Alert } from "react-native";
+import { Text, View, TextInput, StyleSheet, Alert, Pressable } from "react-native";
 import { useRef } from "react";
-import { AuthStore, appSignUp } from "../../store.js";
+import { AuthStore, appSignUp } from "../../../firebase";
 import { Stack, useRouter } from "expo-router";
+import { Button } from "react-native-paper";
 
 
 export default function CreateAccount() {
@@ -62,13 +63,14 @@ export default function CreateAccount() {
         />
       </View>
 
-      <Text
+      <Pressable
         style={{ marginBottom: 8 }}
         onPress={async () => {
           const resp = await appSignUp(
             emailRef.current,
             passwordRef.current,
-            firstNameRef.current + " " + lastNameRef.current
+            firstNameRef.current,
+            lastNameRef.current
           );
           if (resp?.user) {
             router.replace("/(tabs)/home");
@@ -78,8 +80,10 @@ export default function CreateAccount() {
           }
         }}
       >
-        SAVE NEW USER
-      </Text>
+        <Button>
+          SAVE NEW USER
+        </Button>
+      </Pressable>
 
       <Text
         onPress={() => {
