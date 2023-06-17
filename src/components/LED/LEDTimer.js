@@ -39,9 +39,9 @@ const LEDTimer = ({ hours, minutes, seconds, onUpdateTimer, bottomSheetModalRef 
                 <Switch value={isTimerOn} onValueChange={handleTimerToggle} />
             </View>
             <View pointerEvents={isTimerOn ? 'auto' : 'none'} style={styles.itemContainer} >
-                    <TimerTimePicker
+                <TimerTimePicker
                     disabled={!isTimerOn}
-                    onValueChange={setNewHours}
+                    onValueChanging={setNewHours}
                     start={0}
                     end={23}
                     overlayLabel={"hr"}
@@ -49,7 +49,7 @@ const LEDTimer = ({ hours, minutes, seconds, onUpdateTimer, bottomSheetModalRef 
                 />
                 <TimerTimePicker
                     disabled={!isTimerOn}
-                    onValueChange={setNewMinutes}
+                    onValueChanging={setNewMinutes}
                     start={0}
                     end={59}
                     overlayLabel={"min"}
@@ -57,7 +57,7 @@ const LEDTimer = ({ hours, minutes, seconds, onUpdateTimer, bottomSheetModalRef 
                 />
                 <TimerTimePicker
                     disabled={!isTimerOn}
-                    onValueChange={setNewSeconds}
+                    onValueChanging={setNewSeconds}
                     start={0}
                     end={59}
                     overlayLabel={"sec"}

@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     divider: {
         width: 3,
         height: '80%',
-        borderRadius: '50%',
+        borderRadius: 50,
         backgroundColor: 'rgba(255, 255, 255, 0.5)',
     },
     sensorType: {

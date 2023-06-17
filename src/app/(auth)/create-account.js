@@ -1,6 +1,6 @@
 import { Text, View, TextInput, StyleSheet, Alert, Pressable } from "react-native";
 import { useRef } from "react";
-import { AuthStore, appSignUp } from "../../../firebase";
+import { AuthStore, appSignUp } from "../../store/auth";
 import { Stack, useRouter } from "expo-router";
 import { Button } from "react-native-paper";
 

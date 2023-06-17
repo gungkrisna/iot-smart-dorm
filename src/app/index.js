@@ -1,5 +1,5 @@
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
-import { AuthStore } from "../store/firebase";
+import { AuthStore } from "../store/auth";
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 

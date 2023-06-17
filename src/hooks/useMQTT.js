@@ -215,7 +215,7 @@ export default function useMQTT(rootPath, userName, password, server, port) {
         )
     }
   )
-
+  
   return {
     mqttConnectRef,
     isConnected,

@@ -1,12 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Switch, Image } from 'react-native';
-
 import SafeViewAndroid from '../../../components/AndroidSafeArea';
-
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from "expo-router";
 import * as LocalAuthentication from 'expo-local-authentication';
-
 import { Ionicons, Entypo, AntDesign } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { MQTTContext } from '../../../context/MQTTContext';
@@ -14,6 +11,8 @@ import SensorCard from '../../../components/SensorCard';
 import DeviceCard, { getDeviceIcon, deviceData } from '../../../components/DeviceCard';
 import Grid from '../../../components/Grid';
 import useElapsedTime from '../../../hooks/useElapsedTime';
+import { SectionHeader } from '../../../components/SectionHeader';
+import { AuthStore } from "../../../store/auth";
 
 const Tab1Index = () => {
     const { isLoading, temp, hum, DHTLastUpdate, isDoorLocked, toggleLock, isLedTurnedOn, handleLedToggle } = useContext(MQTTContext);
@@ -143,8 +142,8 @@ const Tab1Index = () => {
             <View style={styles.containerBody}>
                 <View style={styles.headerRow}>
                     <View style={styles.headerCol}>
-                        <Text style={[styles.headerText, { fontWeight: '800', fontSize: 24, marginBottom: 8 }]}>Hey Danielle</Text>
-                        <Text style={styles.headerText}>Welcome to your smart home</Text>
+                        <Text style={[styles.headerText, { fontWeight: '800', fontSize: 24, marginBottom: 8 }]}>Hey {AuthStore.getRawState().user?.displayName?.split(' ')[0]}</Text>
+                        <Text style={styles.headerTexrRt}>Welcome to your smart home</Text>
                     </View>
                     <View style={styles.imageBox}>
                         <Image
@@ -154,10 +153,8 @@ const Tab1Index = () => {
                     </View>
                 </View>
 
-                <View style={styles.headerSectionRow}>
-                    <Text style={[styles.headerText, { fontWeight: '600' }]}> Room Climate Monitor </Text>
-
-                    {!(!DHTLastUpdate && DHTLastUpdate == 0 && climateMonitorLastUpdate.hours == 0 && climateMonitorLastUpdate.minutes == 0 && climateMonitorLastUpdate.seconds == 0) && (
+                <SectionHeader title="Room Climate Monitor" actionComponent={
+                    !(!DHTLastUpdate && DHTLastUpdate == 0 && climateMonitorLastUpdate.hours == 0 && climateMonitorLastUpdate.minutes == 0 && climateMonitorLastUpdate.seconds == 0) && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Text style={[styles.headerText, { fontWeight: '400', fontSize: 13, marginRight: 6 }]}>
                                 {
@@ -170,9 +167,8 @@ const Tab1Index = () => {
                                 ago
                             </Text>
                         </View>
-                    )}
-
-                </View>
+                    )
+                } />
 
                 <Grid
                     renderItem={renderSensor}
@@ -180,10 +176,9 @@ const Tab1Index = () => {
                     numColumns={2}
                 />
 
-                <View style={styles.headerSectionRow}>
-                    <Text style={[styles.headerText, { fontWeight: '600' }]}> Devices </Text>
+                <SectionHeader title="Devices" actionComponent={(
                     <Entypo name="dots-three-horizontal" size={18} style={{ marginRight: 8 }} color="black" />
-                </View>
+                )} />
 
                 <Grid
                     renderItem={renderDevice}
@@ -219,13 +214,12 @@ const Tab1Index = () => {
                     <Ionicons name="chevron-forward-outline" size={24} />
                 </TouchableOpacity>
 
-                <View style={styles.headerSectionRow}>
-                    <Text style={[styles.headerText, { fontWeight: '600' }]}> Automation </Text>
+                <SectionHeader title="Automation" actionComponent={(
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.headerText, { fontWeight: '400', fontSize: 13, marginRight: 6 }]}> See more </Text>
                         <AntDesign name="arrowright" size={18} style={{ marginRight: 8 }} color="black" />
                     </View>
-                </View>
+                )} />
 
 
             </View>

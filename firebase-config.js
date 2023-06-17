@@ -19,6 +19,7 @@ const firebaseConfig = {
 export const FIREBASE_APP = initializeApp(firebaseConfig);
 initializeAuth(FIREBASE_APP, {
   persistence: getReactNativePersistence(AsyncStorage),
+  experimentalAutoDetectLongPolling: true
 });
 export const FIREBASE_AUTH = getAuth();
 export const FIREBASE_DB = getFirestore(FIREBASE_APP);

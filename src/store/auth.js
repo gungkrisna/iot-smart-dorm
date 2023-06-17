@@ -7,7 +7,7 @@ import {
   updateProfile,
 } from "firebase/auth/react-native";
 import { FIREBASE_AUTH, FIREBASE_DB } from "../../firebase-config";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 export const AuthStore = new Store({
   isLoggedIn: false,
@@ -98,6 +98,36 @@ export const retrieveUserDevice = async () => {
   } catch (error) {
     console.log(error);
     return { error };
+  }
+};
+
+export const addAutomation = async (props) => {
+  try {
+    const currentUser = FIREBASE_AUTH.currentUser;
+    const userDocRef = doc(FIREBASE_DB, "users", currentUser.uid);
+    const userSnapshot = await getDoc(userDocRef);
+
+    const deviceRef = userSnapshot.data().device;
+    const deviceName = deviceRef.id;
+    const deviceDocRef = doc(FIREBASE_DB, "devices", deviceName);
+
+    const automationData = {
+      clock: props.clock,
+      isRepeat: props.isRepeat,
+      days: props.days,
+      timezone: props.timezone,
+      device: "LED",
+      index: props.index,
+      path: props.path,
+      turnOn: props.turnOn
+    };
+
+    await addDoc(collection(deviceDocRef, "/automation"), automationData);
+
+    return true; 
+  } catch (error) {
+    console.log(error);
+    return false; 
   }
 };
 

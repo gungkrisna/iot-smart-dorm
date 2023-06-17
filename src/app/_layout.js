@@ -1,6 +1,6 @@
 import { SplashScreen, Stack } from "expo-router";
 import { useContext, useEffect, useState } from "react";
-import { AuthStore, retrieveUserDevice } from "../../firebase";
+import { AuthStore, retrieveUserDevice } from "../store/auth";
 import { MQTTProvider } from "../context/MQTTContext";
 
 import {

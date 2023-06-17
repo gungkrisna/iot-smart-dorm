@@ -1,9 +1,9 @@
 import { memo, useMemo } from 'react';
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import Picker from '@quidone/react-native-wheel-picker';
+import WheelPicker from '@gungkrisna/react-native-ios-time-picker';
 
-const CustomTimePicker = ({ start, end, onValueChange, overlayStyle }) => {
+const ScheduleTimePicker = ({ start, end, onValueChanging, overlayStyle, initialValue }) => {
   const dataArr = useMemo(() => {
     const length = end - start + 1;
     return Array.from({ length }, (_, index) => ({
@@ -12,12 +12,19 @@ const CustomTimePicker = ({ start, end, onValueChange, overlayStyle }) => {
     }));
   }, [start, end]);
 
+  const value = useMemo(() => {
+    if (initialValue !== undefined) {
+      return initialValue;
+    }
+    return start + 2;
+  }, [start, initialValue]);
+
   return (
-    <Picker
+    <WheelPicker
       onValueChanging={({ item }) => {
-        onValueChange(item.value);
+        onValueChanging(item.value);
       }}
-      value={start + 2}
+      value={value}
       width={120}
       data={dataArr}
       itemTextStyle={styles.itemTextStyle}
@@ -32,4 +39,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default memo(CustomTimePicker);
+export default memo(ScheduleTimePicker);

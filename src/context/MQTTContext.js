@@ -16,7 +16,7 @@ export const MQTTProvider = (props) => {
   }, [isConnected]);
 
   return (
-    <MQTTContext.Provider value={{ mqttConnectRef, isLoading, temp, hum, DHTLastUpdate, isDoorLocked, isLedTurnedOn, ledBrightness, handleLedBrightness,ledTimer, handleLedTimer, toggleLock, handleLedToggle }}>
+    <MQTTContext.Provider value={{ rootPath, mqttConnectRef, isLoading, temp, hum, DHTLastUpdate, isDoorLocked, isLedTurnedOn, ledBrightness, handleLedBrightness,ledTimer, handleLedTimer, toggleLock, handleLedToggle }}>
       {props.children}
     </MQTTContext.Provider>
   );

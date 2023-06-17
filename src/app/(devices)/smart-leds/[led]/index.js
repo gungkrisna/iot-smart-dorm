@@ -1,28 +1,25 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, Text, StyleSheet, View, Pressable } from 'react-native';
-
 import Bulb from '../../../../components/LED/Bulb';
 import SafeViewAndroid from '../../../../components/AndroidSafeArea';
-
 import { StatusBar } from 'expo-status-bar';
-
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetBackdrop, BottomSheetView, useBottomSheetDynamicSnapPoints } from '@gorhom/bottom-sheet';
 import EditLEDName from '../../../../components/LED/EditLEDName';
 import useCountdown from '../../../../hooks/useCountdown';
-
 import { useSharedValue } from 'react-native-reanimated';
 import { Slider } from 'react-native-awesome-slider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import LEDTimer from '../../../../components/LED/LEDTimer';
 import LEDSchedule from '../../../../components/LED/LEDSchedule';
 import { MQTTContext } from '../../../../context/MQTTContext';
+import { addAutomation } from '../../../../store/auth';
 
 const Led = () => {
     const { led } = useLocalSearchParams();
-    const { isLedTurnedOn, handleLedToggle, ledBrightness, handleLedBrightness, ledTimer, handleLedTimer } = useContext(MQTTContext);
+    const { rootPath, isLedTurnedOn, handleLedToggle, ledBrightness, handleLedBrightness, ledTimer, handleLedTimer } = useContext(MQTTContext);
     const [ledName, setLEDName] = useState('Ruang Keluarga');
     const [brightness, setBrightness] = useState(255);
     const [utility, setUtility] = useState('');
@@ -68,10 +65,6 @@ const Led = () => {
     const handleLEDModalPress = useCallback((utility) => {
         setUtility(utility);
         bottomSheetModalRef.current?.present();
-    }, []);
-
-    const handleLEDModalClose = useCallback(() => {
-        bottomSheetModalRef.current?.snapTo(0);
     }, []);
 
     const handleSheetChanges = useCallback((index) => {
@@ -218,8 +211,7 @@ const Led = () => {
                                 <Text style={[styles.toggleButtonText, isLedTurnedOn[led] && { color: 'rgb(10, 132, 255)' }]}>Turn {isLedTurnedOn[led] ? 'off' : 'on'}</Text>
                             </Pressable>
                         </View>
-
-
+                        
                         <BottomSheetModal
                             enablePanDownToClose={false}
                             enableOverDrag={false}
@@ -238,7 +230,7 @@ const Led = () => {
                             <BottomSheetView style={styles.bsContentContainer}
                                 onLayout={handleContentLayout}>
                                 {utility === 'edit' && <EditLEDName ledName={ledName} onUpdateLEDName={updateLEDName} bottomSheetModalRef={bottomSheetModalRef} />}
-                                {utility === 'schedule' && <LEDSchedule timerTimestamp={ledTimer[led]} onUpdateTimer={(timestamp) => handleLedTimer(led, timestamp)} bottomSheetModalRef={bottomSheetModalRef} />}
+                                {utility === 'schedule' && <LEDSchedule rootPath={rootPath} led={led} onAddSchedule={(props) => addAutomation(props)} bottomSheetModalRef={bottomSheetModalRef} />}
                                 {utility === 'timer' && <LEDTimer hours={timeRemaining.hours} minutes={timeRemaining.minutes} seconds={timeRemaining.seconds} onUpdateTimer={(timestamp) => handleLedTimer(led, timestamp)} bottomSheetModalRef={bottomSheetModalRef} />}
                             </BottomSheetView>
                         </BottomSheetModal>

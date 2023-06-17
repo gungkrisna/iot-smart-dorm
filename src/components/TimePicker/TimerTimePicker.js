@@ -1,9 +1,9 @@
 import { memo, useMemo } from 'react';
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import Picker from '@quidone/react-native-wheel-picker';
+import WheelPicker from '@gungkrisna/react-native-ios-time-picker';
 
-const TimerTimePicker = ({disabled, start, end, onValueChange, overlayLabel, overlayStyle }) => {
+const TimerTimePicker = ({disabled, start, end, onValueChanging, overlayLabel, overlayStyle }) => {
     const dataArr = useMemo(() => {
         const length = end - start + 1;
         return Array.from({ length }, (_, index) => ({
@@ -13,14 +13,14 @@ const TimerTimePicker = ({disabled, start, end, onValueChange, overlayLabel, ove
       }, [start, end]);
 
     return (
-        <Picker
+        <WheelPicker
             onValueChanging={({ item }) => {
-                onValueChange(item.value);
+                onValueChanging(item.value);
             }}
             value={0}
             width={120}
             data={dataArr}
-            itemTextStyle={[style.itemTextStyle, disabled && {color: 'rgba(255,255,255,0.5)'}]}
+            itemTextStyle={[styles.itemTextStyle, disabled && {color: 'rgba(255,255,255,0.5)'}]}
             labelTextStyle={disabled && {color: 'rgba(255,255,255,0.5)'}}
             selectionOverlayLabel={overlayLabel}
             selectionOverlayStyle={[overlayStyle, disabled && {backgroundColor: 'rgba(255,255,255,0.03)'}]}
@@ -28,7 +28,7 @@ const TimerTimePicker = ({disabled, start, end, onValueChange, overlayLabel, ove
     );
 };
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
     itemTextStyle: {
         color: 'white',
         textAlign: 'right',
