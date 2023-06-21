@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView, Text, StyleSheet, View, Pressable } from 'react-native';
+import { SafeAreaView, Text, StyleSheet, View, Pressable, ActivityIndicator } from 'react-native';
 import Bulb from '../../../../components/LED/Bulb';
 import SafeViewAndroid from '../../../../components/AndroidSafeArea';
 import { StatusBar } from 'expo-status-bar';
@@ -15,12 +15,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import LEDTimer from '../../../../components/LED/LEDTimer';
 import LEDSchedule from '../../../../components/LED/LEDSchedule';
 import { MQTTContext } from '../../../../context/MQTTContext';
-import { addAutomation } from '../../../../store/auth';
+import { addAutomation, getLedName } from '../../../../store/auth';
 
 const Led = () => {
     const { led } = useLocalSearchParams();
     const { rootPath, isLedTurnedOn, handleLedToggle, ledBrightness, handleLedBrightness, ledTimer, handleLedTimer } = useContext(MQTTContext);
-    const [ledName, setLEDName] = useState('Ruang Keluarga');
     const [brightness, setBrightness] = useState(255);
     const [utility, setUtility] = useState('');
     const [bottomSheetPos, setBottomSheetPos] = useState(-1);
@@ -36,6 +35,20 @@ const Led = () => {
     const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
     const [countdownHours, countdownMinutes, countdownSeconds] = useCountdown(timestamp);
+    const [isFetching, setFetching] = useState(true);
+    const [ledName, setLedName] = useState("");
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setFetching(() => true);
+            await getLedName(0, (name) => {
+                setLedName(name);
+            });
+            setFetching(() => false);
+        };
+
+        fetchData();
+    }, []);
 
     useEffect(() => {
         setTimestamp((parseInt(ledTimer[led]) * 1000));
@@ -84,10 +97,18 @@ const Led = () => {
         []
     )
 
-    const updateLEDName = (name) => {
-        setLEDName(name);
+    const updateLedName = (name) => {
+        setLedName(() => name);
     }
 
+
+    if (isFetching) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" />
+            </View>
+        );
+    }
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheetModalProvider>
@@ -105,8 +126,8 @@ const Led = () => {
                                 <Ionicons name="chevron-back" size={22} color="white" />
                             </Pressable>
                             <View>
-                                <Text style={styles.ledHeadingTitle}>Kusumon Smart LED {led}</Text>
-                                <Text style={styles.ledHeadingName}>{ledName}</Text>
+                                <Text style={styles.ledHeadingTitle}>Smart LED {Number(led) + 1}</Text>
+                                <Text style={[styles.ledHeadingName, { top: 0 }]}>{ledName}</Text>
                             </View>
                             <Pressable
                                 style={({ pressed }) => [
@@ -123,69 +144,67 @@ const Led = () => {
                             <Bulb isLit={isLedTurnedOn[led]} isBulbWhite brightness={brightness} />
                         </View>
 
-                        {
-                            isLedTurnedOn[led] && (
-                                <View style={styles.controllerContainer}>
-                                    <View style={styles.controllerContent}>
-                                        <View style={{ position: 'absolute', right: 75 }}>
-                                            <Pressable
-                                                style={({ pressed }) => [
-                                                    styles.sliderButton,
-                                                    { opacity: pressed ? 0.5 : 1.0 },
-                                                ]}
-                                                onPress={() => handleLEDModalPress('edit')}
-                                            >
-                                                <Ionicons name="pencil-outline" size={30} color="white" />
-                                            </Pressable>
-                                            <Pressable
-                                                style={({ pressed }) => [
-                                                    styles.sliderButton,
-                                                    { opacity: pressed ? 0.5 : 1.0 },
-                                                ]}
-                                                onPress={() => handleLEDModalPress('schedule')}>
-                                                <Ionicons name="calendar-outline" size={30} color="white" />
-                                            </Pressable>
-                                            <Pressable
-                                                style={({ pressed }) => [
-                                                    styles.sliderButton,
-                                                    !(timeRemaining.hours == 0 && timeRemaining.minutes == 0 && timeRemaining.seconds == 0) && { backgroundColor: '#ffffff' },
-                                                    { opacity: pressed ? 0.5 : 1.0 },
-                                                ]}
-                                                onPress={() => handleLEDModalPress('timer')}>
-                                                <Ionicons name="timer-outline" size={30} color={!(timeRemaining.hours == 0 && timeRemaining.minutes == 0 && timeRemaining.seconds == 0) ? "rgb(10, 132, 255)" : "white"} />
-                                            </Pressable>
-                                        </View>
-                                        <Slider
-                                            onHapticFeedback={() => {
-                                                ReactNativeHapticFeedback.trigger('impactLight', {
-                                                    enableVibrateFallback: true,
-                                                    ignoreAndroidSystemSettings: false,
-                                                });
-                                            }}
-                                            style={{ transform: [{ rotate: '-90deg' }], position: 'absolute', bottom: '50%', right: -59 }}
-                                            theme={{
-                                                disableMinTrackTintColor: '#424242',
-                                                maximumTrackTintColor: '#424242',
-                                                minimumTrackTintColor: '#fff',
-                                                cacheTrackTintColor: '#fff',
-
-                                            }}
-                                            renderBubble={() => null}
-                                            renderThumb={() => null}
-                                            progress={currLedBrightness}
-                                            minimumValue={min}
-                                            maximumValue={max}
-                                            minimumTrackTintColor="#fff"
-                                            maximumTrackTintColor="#fff"
-                                            hapticMode='HapticModeEnum.NONE'
-                                            containerStyle={{ borderRadius: 12, width: 212, height: 60 }}
-                                            onValueChange={(brightness) => setBrightness(brightness)}
-                                            onSlidingComplete={(brightness) => handleLedBrightness(led, brightness)}
-                                        />
+                        {isLedTurnedOn[led] && (
+                            <View style={[styles.controllerContainer]}>
+                                <View style={styles.controllerContent}>
+                                    <View style={styles.controllerWrapper}>
+                                        <Pressable
+                                            style={({ pressed }) => [
+                                                styles.sliderButton,
+                                                { opacity: pressed ? 0.5 : 1.0 },
+                                            ]}
+                                            onPress={() => handleLEDModalPress('edit')}
+                                        >
+                                            <Ionicons name="pencil-outline" size={30} color="white" />
+                                        </Pressable>
+                                        <Pressable
+                                            style={({ pressed }) => [
+                                                styles.sliderButton,
+                                                { opacity: pressed ? 0.5 : 1.0 },
+                                            ]}
+                                            onPress={() => handleLEDModalPress('schedule')}>
+                                            <Ionicons name="calendar-outline" size={30} color="white" />
+                                        </Pressable>
+                                        <Pressable
+                                            style={({ pressed }) => [
+                                                styles.sliderButton,
+                                                !(timeRemaining.hours == 0 && timeRemaining.minutes == 0 && timeRemaining.seconds == 0) && { backgroundColor: '#ffffff' },
+                                                { opacity: pressed ? 0.5 : 1.0 },
+                                            ]}
+                                            onPress={() => handleLEDModalPress('timer')}>
+                                            <Ionicons name="timer-outline" size={30} color={!(timeRemaining.hours == 0 && timeRemaining.minutes == 0 && timeRemaining.seconds == 0) ? "rgb(10, 132, 255)" : "white"} />
+                                        </Pressable>
                                     </View>
+                                    <Slider
+                                        onHapticFeedback={() => {
+                                            ReactNativeHapticFeedback.trigger('impactLight', {
+                                                enableVibrateFallback: true,
+                                                ignoreAndroidSystemSettings: false,
+                                            });
+                                        }}
+                                        style={{ transform: [{ rotate: '-90deg' }], position: 'absolute', bottom: '50%', right: -59 }}
+                                        theme={{
+                                            disableMinTrackTintColor: '#424242',
+                                            maximumTrackTintColor: '#424242',
+                                            minimumTrackTintColor: '#fff',
+                                            cacheTrackTintColor: '#fff',
+
+                                        }}
+                                        renderBubble={() => null}
+                                        renderThumb={() => null}
+                                        progress={currLedBrightness}
+                                        minimumValue={min}
+                                        maximumValue={max}
+                                        minimumTrackTintColor="#fff"
+                                        maximumTrackTintColor="#fff"
+                                        hapticMode='HapticModeEnum.NONE'
+                                        containerStyle={{ borderRadius: 12, width: 212, height: 66 }}
+                                        onValueChange={(brightness) => setBrightness(brightness)}
+                                        onSlidingComplete={(brightness) => handleLedBrightness(led, brightness)}
+                                    />
                                 </View>
-                            )
-                        }
+                            </View>
+                        )}
 
 
                         <View style={styles.toggleButtonWrapper}>
@@ -201,7 +220,36 @@ const Led = () => {
                                     }
                                 </Text>
                             )}
-
+                            {!isLedTurnedOn[led] && (
+                                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', bottom: 24, marginTop: 8 }}>
+                                    <Pressable
+                                        style={({ pressed }) => [
+                                            styles.sliderButton,
+                                            { opacity: pressed ? 0.5 : 1.0 },
+                                        ]}
+                                        onPress={() => handleLEDModalPress('edit')}
+                                    >
+                                        <Ionicons name="pencil-outline" size={30} color="white" />
+                                    </Pressable>
+                                    <Pressable
+                                        style={({ pressed }) => [
+                                            styles.sliderButton,
+                                            { opacity: pressed ? 0.5 : 1.0 },
+                                        ]}
+                                        onPress={() => handleLEDModalPress('schedule')}>
+                                        <Ionicons name="calendar-outline" size={30} color="white" />
+                                    </Pressable>
+                                    <Pressable
+                                        style={({ pressed }) => [
+                                            styles.sliderButton,
+                                            !(timeRemaining.hours == 0 && timeRemaining.minutes == 0 && timeRemaining.seconds == 0) && { backgroundColor: '#ffffff' },
+                                            { opacity: pressed ? 0.5 : 1.0 },
+                                        ]}
+                                        onPress={() => handleLEDModalPress('timer')}>
+                                        <Ionicons name="timer-outline" size={30} color={!(timeRemaining.hours == 0 && timeRemaining.minutes == 0 && timeRemaining.seconds == 0) ? "rgb(10, 132, 255)" : "white"} />
+                                    </Pressable>
+                                </View>
+                            )}
                             <Pressable
                                 style={({ pressed }) => [
                                     styles.toggleButton,
@@ -211,7 +259,7 @@ const Led = () => {
                                 <Text style={[styles.toggleButtonText, isLedTurnedOn[led] && { color: 'rgb(10, 132, 255)' }]}>Turn {isLedTurnedOn[led] ? 'off' : 'on'}</Text>
                             </Pressable>
                         </View>
-                        
+
                         <BottomSheetModal
                             enablePanDownToClose={false}
                             enableOverDrag={false}
@@ -229,7 +277,7 @@ const Led = () => {
                         >
                             <BottomSheetView style={styles.bsContentContainer}
                                 onLayout={handleContentLayout}>
-                                {utility === 'edit' && <EditLEDName ledName={ledName} onUpdateLEDName={updateLEDName} bottomSheetModalRef={bottomSheetModalRef} />}
+                                {utility === 'edit' && <EditLEDName ledIndex={led} ledName={ledName} onUpdateLedName={updateLedName} bottomSheetModalRef={bottomSheetModalRef} />}
                                 {utility === 'schedule' && <LEDSchedule rootPath={rootPath} led={led} onAddSchedule={(props) => addAutomation(props)} bottomSheetModalRef={bottomSheetModalRef} />}
                                 {utility === 'timer' && <LEDTimer hours={timeRemaining.hours} minutes={timeRemaining.minutes} seconds={timeRemaining.seconds} onUpdateTimer={(timestamp) => handleLedTimer(led, timestamp)} bottomSheetModalRef={bottomSheetModalRef} />}
                             </BottomSheetView>
@@ -293,17 +341,22 @@ const styles = StyleSheet.create({
     controllerContainer: {
         position: 'absolute',
         top: '50%',
-        right: 24,
+        right: 12,
         height: 'auto',
         width: '100%',
         flex: 1,
         alignItems: 'flex-end',
     },
     controllerContent: {
-        height: 200,
+        height: 212,
         flex: 1,
         flexDirection: 'row',
         alignItems: 'flex-end'
+    },
+    controllerWrapper: {
+        position: 'absolute',
+        flexDirection: 'column',
+        right: 75
     },
     sliderThumb: {
         backgroundColor: '#fff',
@@ -366,6 +419,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         paddingVertical: 12,
         width: '100%',
+    },
+    loadingContainer: {
+        flex: 1,
+        backgroundColor: '#212121',
+        justifyContent: "center",
+        alignItems: "center",
     }
 })
 

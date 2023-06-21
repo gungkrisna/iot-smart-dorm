@@ -2,7 +2,6 @@ import { View, StyleSheet, Text } from "react-native"
 import { LinearGradient } from "expo-linear-gradient";
 
 const SensorCard = ({ sensorType, value, unit }) => {
-
     return (
         <LinearGradient
             colors={['rgb(213, 223, 232)', 'rgb(156, 195, 215)', 'rgb(95, 123, 164)']}
@@ -21,7 +20,6 @@ const SensorCard = ({ sensorType, value, unit }) => {
             </LinearGradient>
             
             <Text style={styles.sensorValue}>{Math.round(value * 10) / 10}{unit}</Text>
-
         </LinearGradient>
     )
 }
@@ -44,7 +42,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingLeft: 8,
         paddingRight: 6,
-        paddingVertical: 24
+        paddingVertical: 20
     },
     divider: {
         width: 3,

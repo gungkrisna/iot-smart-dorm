@@ -7,7 +7,7 @@ export const MQTTProvider = (props) => {
   const { rootPath, userName, password, server, port } = props;
   const [isLoading, setIsLoading] = useState(true);
 
-  const { mqttConnectRef, isConnected, temp, hum, DHTLastUpdate, isDoorLocked, isLedTurnedOn, ledBrightness, handleLedBrightness, ledTimer, handleLedTimer, toggleLock, handleLedToggle } = useMQTT(
+  const { onMQTTLost, mqttConnectRef, isConnected, temp, hum, DHTLastUpdate, isDoorLocked, isLedTurnedOn, ledBrightness, handleLedBrightness, ledTimer, handleLedTimer, toggleLock, handleLedToggle } = useMQTT(
     rootPath, userName, password, server, port
   );
 
@@ -16,7 +16,7 @@ export const MQTTProvider = (props) => {
   }, [isConnected]);
 
   return (
-    <MQTTContext.Provider value={{ rootPath, mqttConnectRef, isLoading, temp, hum, DHTLastUpdate, isDoorLocked, isLedTurnedOn, ledBrightness, handleLedBrightness,ledTimer, handleLedTimer, toggleLock, handleLedToggle }}>
+    <MQTTContext.Provider value={{ rootPath, onMQTTLost, mqttConnectRef, isLoading, temp, hum, DHTLastUpdate, isDoorLocked, isLedTurnedOn, ledBrightness, handleLedBrightness,ledTimer, handleLedTimer, toggleLock, handleLedToggle }}>
       {props.children}
     </MQTTContext.Provider>
   );

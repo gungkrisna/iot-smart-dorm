@@ -1,24 +1,56 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity, StyleSheet, Switch, Image } from 'react-native';
+import { ScrollView, RefreshControl, FlatList, ActivityIndicator, SafeAreaView, View, Text, StyleSheet, Switch, Image } from 'react-native';
 import SafeViewAndroid from '../../../components/AndroidSafeArea';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from "expo-router";
 import * as LocalAuthentication from 'expo-local-authentication';
-import { Ionicons, Entypo, AntDesign } from '@expo/vector-icons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Entypo, AntDesign } from '@expo/vector-icons';
 import { MQTTContext } from '../../../context/MQTTContext';
 import SensorCard from '../../../components/SensorCard';
-import DeviceCard, { getDeviceIcon, deviceData } from '../../../components/DeviceCard';
+import DeviceCard, { deviceData } from '../../../components/DeviceCard';
 import Grid from '../../../components/Grid';
 import useElapsedTime from '../../../hooks/useElapsedTime';
 import { SectionHeader } from '../../../components/SectionHeader';
-import { AuthStore } from "../../../store/auth";
+import { AuthStore, retrieveAutomation, getLedName } from "../../../store/auth";
+import ListItem from '../../../components/ListItem';
+import { ChevronForward, DoorLockIcon, LedIcon } from '../../../components/Icon';
+import useAutomationData from '../../../hooks/useAutomationData';
+import WeekdaysArrayToString from '../../../utils/WeekdaysArrayToString';
+import { MenuProvider, Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import ToggleSwitch from "toggle-switch-react-native"
+import FormatTime from '../../../utils/FormatTime';
 
 const Tab1Index = () => {
-    const { isLoading, temp, hum, DHTLastUpdate, isDoorLocked, toggleLock, isLedTurnedOn, handleLedToggle } = useContext(MQTTContext);
-
     const router = useRouter();
+
+    const { onMQTTLost, isLoading, temp, hum, DHTLastUpdate, isDoorLocked, toggleLock, isLedTurnedOn, handleLedToggle, ledBrightness } = useContext(MQTTContext);
     const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+    const { isFetching, automationDocuments, onUpdateAutomationDocuments } = useAutomationData(3);
+    const [isDeviceGridView, setDevicevGridView] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [ledName, setLedName] = useState("");
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await getLedName(0, (name) => {
+                setLedName(name);
+            });
+        };
+
+        fetchData();
+    }, []);
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+
+        try {
+            await retrieveAutomation(onUpdateAutomationDocuments);
+        } catch (error) {
+            console.log('Error refreshing data:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const sensorData = [
         { sensorType: 'Temp', value: temp, unit: '°C' },
@@ -61,8 +93,8 @@ const Tab1Index = () => {
 
         if (areAllLedsTurnedOn) {
             handleLedToggle(0);
-            handleLedToggle(1);
-            handleLedToggle(2);
+            //handleLedToggle(1);
+            //handleLedToggle(2);
         } else {
             isLedTurnedOn.forEach((led, index) => {
                 if (!led) {
@@ -72,20 +104,31 @@ const Tab1Index = () => {
         }
     }
 
-    if (isLoading) {
+    if (isLoading && isFetching) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="blue" />
+                <ActivityIndicator size="large" />
             </View>
         );
     }
 
+    const getDeviceIcon = (deviceType) => {
+        switch (deviceType) {
+            case 'doorlock':
+                return <DoorLockIcon size={30} color="#cecece" />;
+            case 'leds':
+                return <LedIcon size={30} color="#cecece" />;
+            default:
+                return null;
+        }
+    }
+
     const getDeviceOnPress = (deviceType, router) => {
         switch (deviceType) {
-            case 'Door Lock':
+            case 'doorlock':
                 return handleDoorLockToggle;
-            case 'LEDs [3]':
-                return () => router.push('/(devices)/smart-leds');
+            case 'leds':
+                return () => router.push('/(devices)/smart-leds/0');
             default:
                 return null;
         }
@@ -93,21 +136,35 @@ const Tab1Index = () => {
 
     const getDeviceSwitchValue = (deviceType) => {
         switch (deviceType) {
-            case 'Door Lock':
+            case 'doorlock':
                 return isDoorLocked;
-            case 'LEDs [3]':
-                return isLedTurnedOn.every((led) => led === true);
+            case 'leds':
+                // return isLedTurnedOn.every((led) => led === true);
+                return isLedTurnedOn[0];
             default:
                 return null;
         }
     }
 
-    const getOnValueChange = (deviceType) => {
+    const getDeviceInfo = (deviceType) => {
         switch (deviceType) {
-            case 'Door Lock':
+            case 'doorlock':
+                return null;
+            case 'leds':
+                // return isLedTurnedOn.every((led) => led === true);
+                return ledBrightness[0];
+            default:
+                return null;
+        }
+    }
+
+    const getDeviceOnValueChange = (deviceType) => {
+        switch (deviceType) {
+            case 'doorlock':
                 return handleDoorLockToggle;
-            case 'LEDs [3]':
-                return handleMassLedToggle;
+            case 'leds':
+                // return handleMassLedToggle;
+                return (() => handleLedToggle(0));
             default:
                 return null;
         }
@@ -131,106 +188,140 @@ const Tab1Index = () => {
                 icon={getDeviceIcon(item.deviceType)}
                 onPress={getDeviceOnPress(item.deviceType, router)}
                 switchValue={getDeviceSwitchValue(item.deviceType)}
-                onValueChange={getOnValueChange(item.deviceType)}
+                deviceInfo={getDeviceInfo(item.deviceType)}
+                onValueChange={getDeviceOnValueChange(item.deviceType)}
             />
         </View>
     );
 
     return (
-        <SafeAreaView style={{ ...SafeViewAndroid.AndroidSafeArea, ...styles.container }}>
-            <StatusBar style='dark' />
-            <View style={styles.containerBody}>
-                <View style={styles.headerRow}>
-                    <View style={styles.headerCol}>
-                        <Text style={[styles.headerText, { fontWeight: '800', fontSize: 24, marginBottom: 8 }]}>Hey {AuthStore.getRawState().user?.displayName?.split(' ')[0]}</Text>
-                        <Text style={styles.headerTexrRt}>Welcome to your smart home</Text>
-                    </View>
-                    <View style={styles.imageBox}>
-                        <Image
-                            source={{ uri: 'https://kpopping.com/documents/28/0/800/220803-NEWJEANS-SNS-Update-Danielle-documents-1.jpeg?v=6ca92' }}
-                            style={styles.image}
+        <MenuProvider>
+            <SafeAreaView style={{ ...SafeViewAndroid.AndroidSafeArea, ...styles.container }}>
+                <StatusBar style='dark' />
+                <ScrollView
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+                    }
+                >
+                    <View style={styles.containerBody}>
+                        <View style={styles.headerRow}>
+                            <View style={styles.headerCol}>
+                                <Text style={[styles.headerText, { fontWeight: '800', fontSize: 24, marginBottom: 8 }]}>Hey {AuthStore.getRawState().user?.displayName?.split(' ')[0]}</Text>
+                                <Text style={styles.headerText}>Welcome to your smart home</Text>
+                            </View>
+                            <View style={styles.imageBox}>
+                                {/*<Image
+                                    source={{ uri: 'https://kpopping.com/documents/28/0/800/220803-NEWJEANS-SNS-Update-Danielle-documents-1.jpeg?v=6ca92' }}
+                                    style={styles.image}
+                />*/}
+                                <Text style={[styles.headerText, { color: 'white', fontWeight: '800' }]}>{AuthStore.getRawState().user?.displayName.split(' ').map((name) => name.charAt(0).toUpperCase()).join('')}</Text>
+                            </View>
+                        </View>
+
+                        <SectionHeader title="Room Climate Monitor" actionComponent={
+                            !(!DHTLastUpdate && DHTLastUpdate == 0 && climateMonitorLastUpdate.hours == 0 && climateMonitorLastUpdate.minutes == 0 && climateMonitorLastUpdate.seconds == 0) && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={[styles.headerText, { fontWeight: '400', fontSize: 13, marginRight: 6 }]}>
+                                        {
+                                            climateMonitorLastUpdate.hours !== 0
+                                                ? `${climateMonitorLastUpdate.hours}h `
+                                                : climateMonitorLastUpdate.minutes !== 0
+                                                    ? `${climateMonitorLastUpdate.minutes}m `
+                                                    : `${climateMonitorLastUpdate.seconds}s `
+                                        }
+                                        ago
+                                    </Text>
+                                </View>
+                            )
+                        } />
+
+                        <Grid
+                            renderItem={renderSensor}
+                            data={sensorData}
+                            numColumns={2}
                         />
+
+                        <SectionHeader title="Devices" actionComponent={(
+                            <Menu>
+                                <MenuTrigger>
+                                    <Entypo name="dots-three-horizontal" size={18} style={{ marginRight: 8 }} color="black" />
+                                </MenuTrigger>
+                                <MenuOptions
+                                >
+                                    <MenuOption onSelect={() => setDevicevGridView(() => true)} text='Grid View' />
+                                    <MenuOption onSelect={() => setDevicevGridView(() => false)} text='List View' />
+                                </MenuOptions>
+                            </Menu>
+                        )} />
+
+                        {isDeviceGridView ? (
+                            <Grid
+                                renderItem={renderDevice}
+                                data={deviceData}
+                                numColumns={2}
+                            />
+                        ) :
+                            (
+                                <>
+                                    <ListItem
+                                        iconComponent={<DoorLockIcon />}
+                                        text="Smart Door Lock"
+                                        subtitle={isDoorLocked ? "Locked" : "Unlocked"}
+                                        onPress={() => handleDoorLockToggle()}
+                                        actionComponent={<ToggleSwitch isOn={isDoorLocked} onToggle={handleDoorLockToggle} />}
+                                    />
+
+                                    <ListItem
+                                        iconComponent={<LedIcon />}
+                                        text="Smart LED Bulb"
+                                        subtitle={`${isLedTurnedOn[0] ? "On" : "Off"} • Brightness: ${Math.round(ledBrightness[0])}`}
+                                        onPress={() => router.push('/(devices)/smart-leds/0')}
+                                        actionComponent={
+                                            <ToggleSwitch
+                                                isOn={isLedTurnedOn[0]}
+                                                onToggle={() => handleLedToggle(0)}
+                                            />
+                                        }
+                                    />
+                                </>
+                            )}
+
+
+
+                        {automationDocuments.length > 0 && (
+                            <>
+                                <SectionHeader title="Automation" actionComponent={(
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={[styles.headerText, { fontWeight: '400', fontSize: 13, marginRight: 6 }]}> See more </Text>
+                                        <AntDesign name="arrowright" size={18} style={{ marginRight: 8 }} color="black" />
+                                    </View>
+                                )} onActionPress={() => router.push('/(tabs)/automation')} />
+
+                                <FlatList
+                                    scrollEnabled={false}
+                                    contentContainerStyle={{ flexGrow: 1, paddingVertical: 8 }} // Move paddingBottom to style
+                                    data={automationDocuments}
+                                    keyExtractor={(item) => item.id}
+                                    renderItem={({ item }) => (
+                                        <ListItem
+                                            text={`${item.turnOn ? "Nyalakan" : "Matikan"} LED ${ledName}`}
+                                            subtitle={`${WeekdaysArrayToString(item.days, isShortForm = true)} • ${FormatTime(item.clock)}`}
+                                        //actionComponent={<ToggleSwitch isOn={item.turnOn} onToggle={() => {console.log('toggled')}} />}
+                                        />
+                                    )} />
+                            </>
+                        )}
+
+
                     </View>
-                </View>
-
-                <SectionHeader title="Room Climate Monitor" actionComponent={
-                    !(!DHTLastUpdate && DHTLastUpdate == 0 && climateMonitorLastUpdate.hours == 0 && climateMonitorLastUpdate.minutes == 0 && climateMonitorLastUpdate.seconds == 0) && (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={[styles.headerText, { fontWeight: '400', fontSize: 13, marginRight: 6 }]}>
-                                {
-                                    climateMonitorLastUpdate.hours !== 0
-                                        ? `${climateMonitorLastUpdate.hours}h `
-                                        : climateMonitorLastUpdate.minutes !== 0
-                                            ? `${climateMonitorLastUpdate.minutes}m `
-                                            : `${climateMonitorLastUpdate.seconds}s `
-                                }
-                                ago
-                            </Text>
-                        </View>
-                    )
-                } />
-
-                <Grid
-                    renderItem={renderSensor}
-                    data={sensorData}
-                    numColumns={2}
-                />
-
-                <SectionHeader title="Devices" actionComponent={(
-                    <Entypo name="dots-three-horizontal" size={18} style={{ marginRight: 8 }} color="black" />
-                )} />
-
-                <Grid
-                    renderItem={renderDevice}
-                    data={deviceData}
-                    numColumns={2}
-                />
-
-                <View
-                    style={styles.switchRow}
-                >
-
-                    <View style={styles.switchRowLeading}>
-                        <View style={styles.switchRowIcon}>
-                            <MaterialCommunityIcons name="door" size={28} color="#212121" />
-                        </View>
-                        <Text style={styles.switchRowText}>Smart Door Lock</Text>
-                    </View>
-                    <Switch value={isDoorLocked} onValueChange={handleDoorLockToggle} />
-                </View>
-
-                <TouchableOpacity
-                    style={styles.switchRow}
-                    onPress={() => {
-                        router.push('/(devices)/smart-leds');
-                    }}
-                >
-                    <View style={styles.switchRowLeading}>
-                        <View style={styles.switchRowIcon}>
-                            <MaterialCommunityIcons name="lightbulb-outline" size={28} color="#212121" />
-                        </View>
-                        <Text style={styles.switchRowText}>Smart LEDs</Text>
-                    </View>
-                    <Ionicons name="chevron-forward-outline" size={24} />
-                </TouchableOpacity>
-
-                <SectionHeader title="Automation" actionComponent={(
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.headerText, { fontWeight: '400', fontSize: 13, marginRight: 6 }]}> See more </Text>
-                        <AntDesign name="arrowright" size={18} style={{ marginRight: 8 }} color="black" />
-                    </View>
-                )} />
-
-
-            </View>
-
-        </SafeAreaView>
+                </ScrollView>
+            </SafeAreaView>
+        </MenuProvider>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         backgroundColor: '#fff',
     },
     containerBody: {
@@ -251,6 +342,11 @@ const styles = StyleSheet.create({
     imageBox: {
         marginLeft: 16,
         borderRadius: 8,
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#4299e1',
         overflow: 'hidden',
     },
     image: {
@@ -271,33 +367,6 @@ const styles = StyleSheet.create({
     renderItem: {
         flex: 1,
         margin: 5,
-    },
-    switchRow: {
-        backgroundColor: '#f2f2f2',
-        borderRadius: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        marginVertical: 8,
-    },
-    switchRowLeading: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-    },
-    switchRowIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    switchRowText: {
-        fontSize: 16,
-        color: '#000000',
-        marginLeft: 12
     },
     loadingContainer: {
         flex: 1,

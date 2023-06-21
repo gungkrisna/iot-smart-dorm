@@ -1,25 +1,36 @@
 import { View, StyleSheet, Text, Switch, Pressable } from "react-native"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
+import ToggleSwitch from "toggle-switch-react-native"
+
 
 export const deviceData = [
-    { deviceType: 'Door Lock', deviceModel: 'Kusumon Smart Door Lock' },
-    { deviceType: 'LEDs [3]', deviceModel: 'Kusumon Smart LED Bulb' },
+    { deviceType: 'doorlock', deviceModel: 'Smart Door Lock' },
+    { deviceType: 'leds', deviceModel: 'Smart LED Bulb' },
 ];
 
-export const getDeviceIcon = (deviceType) => {
-    const doorIcon = <MaterialCommunityIcons name="door" size={30} color="#cecece" />;
-    const bulbIcon = <MaterialCommunityIcons name="lightbulb-outline" size={30} color="#cecece" />;
+const getDeviceInfo = (deviceType, switchValue, deviceInfo) => {
+    if (deviceInfo !== null) {
+        if (deviceType === 'leds') {
+            if (switchValue) {
+                return `On •  ${Math.round(deviceInfo)}`;
+            } else {
+                return 'Off';
+            }
+        }
+        // For other device types, you can modify this logic as needed.
+        return deviceInfo;
+    }
+
     switch (deviceType) {
-        case 'Door Lock':
-            return doorIcon;
-        case 'LEDs [3]':
-            return bulbIcon;
+        case 'doorlock':
+            return switchValue ? "Locked" : "Unlocked";
+        case 'leds':
+            return switchValue ? "On" : "Off";
         default:
             return null;
     }
-}
+};
 
-const DeviceCard = ({ deviceType, deviceModel, icon, onPress, switchValue, onValueChange }) => {
+const DeviceCard = ({ deviceType, deviceModel, icon, onPress, switchValue, deviceInfo = null, onValueChange }) => {
 
     return (
         <Pressable
@@ -30,10 +41,10 @@ const DeviceCard = ({ deviceType, deviceModel, icon, onPress, switchValue, onVal
             ]}>
             <View style={styles.widgetRowHeading}>
                 {icon}
-                <Switch value={switchValue} onValueChange={onValueChange}/>
+                <ToggleSwitch isOn={switchValue} onToggle={onValueChange} />
             </View>
             <View style={styles.widgetRowDescription}>
-                <Text style={styles.deviceType}>{deviceType}</Text>
+                <Text style={styles.deviceType}>{getDeviceInfo(deviceType, switchValue, deviceInfo)}</Text>
                 <Text style={styles.deviceModel}>{deviceModel}</Text>
             </View>
         </Pressable>
@@ -66,7 +77,7 @@ const styles = StyleSheet.create({
         fontWeight: '400',
     },
     deviceModel: {
-        maxWidth: '80%',
+        maxWidth: '90%',
         fontSize: 16,
         color: '#fff',
         fontWeight: '500',

@@ -15,6 +15,10 @@ const LEDSchedule = ({ rootPath, led, onAddSchedule, bottomSheetModalRef }) => {
     const [hours, setHours] = useState(2);
     const [minutes, setMinutes] = useState(2);
 
+    const [initialHours, setInitialHours] = useState(2);
+    const [initialMinutes, setInitialMinutes] = useState(2);
+
+
     const [scheduleDays, setScheduleDays] = useState({
         Monday: false,
         Tuesday: false,
@@ -69,15 +73,17 @@ const LEDSchedule = ({ rootPath, led, onAddSchedule, bottomSheetModalRef }) => {
             const today = moment().tz(moment.tz.guess()).isoWeekday().toString();
             days = [today];
         }
-        
+
         const props = {
             clock: `${hours}:${minutes}`,
             isRepeat: isRepeat,
             days: days,
             timezone: moment.tz.guess(),
             index: led,
+            device: "LED",
             path: `/${rootPath}/IS_LED_${led}_TURNED_ON`,
-            turnOn: Boolean(isTurnOn)
+            turnOn: Boolean(isTurnOn),
+            updatedAt: new Date().toISOString()
         };
 
         bottomSheetModalRef.current?.close();
@@ -168,55 +174,50 @@ const LEDSchedule = ({ rootPath, led, onAddSchedule, bottomSheetModalRef }) => {
                 </View>
             </View>
 
-            <View style={styles.itemContainer} >
-                {isRepeatMenuVisible
-                    ? (
-                        <FlatList
-                            scrollEnabled={false}
-                            data={Object.keys(scheduleDays)}
-                            renderItem={renderScheduleDays}
-                            keyExtractor={(item) => item}
-                            style={{
-                                marginTop: 36,
-                                marginBottom: 144,
-                                borderRadius: 16,
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                            }}
-                        />
-                    )
-                    : isActionMenuVisible ? (
-                        <FlatList
-                            scrollEnabled={false}
-                            data={["Turn on", "Turn off"]}
-                            renderItem={renderAction}
-                            keyExtractor={(item) => item}
-                            style={{
-                                marginVertical: 36,
-                                borderRadius: 16,
-                                backgroundColor: 'rgba(255,255,255,0.1)',
-                            }}
-                        />
-                    ) : (<>
-                        <ScheduleTimePicker
-                            onValueChanging={(value) => setHours(value)}
-                            initialValue={hours}
-                            width={'50%'}
-                            start={0}
-                            end={23}
-                            itemTextStyle={[styles.itemTextStyle]}
-                            overlayStyle={styles.hoursPicker}
-                        />
-                        <ScheduleTimePicker
-                            onValueChanging={(value) => setMinutes(value)}
-                            initialValue={minutes}
-                            width={'50%'}
-                            start={0}
-                            end={59}
-                            itemTextStyle={[styles.itemTextStyle]}
-                            overlayStyle={styles.minutesPicker}
-                        />
-                    </>)
-                }
+            {isRepeatMenuVisible && (
+                    <FlatList
+                        scrollEnabled={false}
+                        data={Object.keys(scheduleDays)}
+                        renderItem={renderScheduleDays}
+                        keyExtractor={(item) => item}
+                        style={{
+                            marginTop: 36,
+                            marginBottom: 144,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                        }}
+                    />
+                )}
+            {isActionMenuVisible && (
+                <FlatList
+                    scrollEnabled={false}
+                    data={["Turn on", "Turn off"]}
+                    renderItem={renderAction}
+                    keyExtractor={(item) => item}
+                    style={{
+                        marginVertical: 36,
+                        borderRadius: 16,
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                    }}
+                />
+            )}
+            <View style={[styles.itemContainer, (isRepeatMenuVisible || isActionMenuVisible) && { opacity: 0, height: 0, pointerEvents: 'none' }]} >
+                <ScheduleTimePicker
+                    onValueChanging={(value) => setHours(value)}
+                    width={'50%'}
+                    start={0}
+                    end={23}
+                    itemTextStyle={[styles.itemTextStyle]}
+                    overlayStyle={styles.hoursPicker}
+                />
+                <ScheduleTimePicker
+                    onValueChanging={(value) => setMinutes(value)}
+                    width={'50%'}
+                    start={0}
+                    end={59}
+                    itemTextStyle={[styles.itemTextStyle]}
+                    overlayStyle={styles.minutesPicker}
+                />
 
             </View>
 

@@ -16,7 +16,6 @@ const Index = () => {
 
   useEffect(() => {
     if (!navigationState?.key || !initialized) return;
-    //retrieveUserDevice();
 
     const inAuthGroup = segments[0] === "(auth)";
 
@@ -26,10 +25,8 @@ const Index = () => {
       !isLoggedIn &&
       !inAuthGroup
     ) {
-      // Redirect to the login page.
       router.replace("/login");
     } else if (isLoggedIn) {
-      // go to tabs root.
       router.replace("/(tabs)/home");
     }
   }, [segments, navigationState?.key, initialized]);

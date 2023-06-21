@@ -3,25 +3,12 @@ import { useContext, useEffect, useState } from "react";
 import { AuthStore, retrieveUserDevice } from "../store/auth";
 import { MQTTProvider } from "../context/MQTTContext";
 
-import {
-  useFonts,
-  EncodeSansSemiCondensed_100Thin,
-  EncodeSansSemiCondensed_200ExtraLight,
-  EncodeSansSemiCondensed_300Light,
-  EncodeSansSemiCondensed_400Regular,
-  EncodeSansSemiCondensed_500Medium,
-  EncodeSansSemiCondensed_600SemiBold,
-  EncodeSansSemiCondensed_700Bold,
-  EncodeSansSemiCondensed_800ExtraBold,
-  EncodeSansSemiCondensed_900Black,
-} from '@expo-google-fonts/encode-sans-semi-condensed';
-
 export const unstable_settings = {
   initialRouteName: 'index'
 }
 
 export default function Layout() {
-  const { initialized } = AuthStore.useState();
+  const { initialized, isLoggedIn, isDeviceSet } = AuthStore.useState();
   const [deviceData, setDeviceData] = useState(null);
   const [deviceName, setDeviceName] = useState(null);
 
@@ -32,6 +19,10 @@ export default function Layout() {
       const { deviceData, deviceName, error } = await retrieveUserDevice();
 
       if (error) {
+        AuthStore.update((store) => {
+          store.isLoggedIn = false;
+        });
+    
         console.log("Error retrieving user device:", error);
       } else {
         setDeviceData(deviceData);
@@ -39,19 +30,13 @@ export default function Layout() {
       }
     };
 
-    fetchUserDevice();
-  }, [initialized]);
+    if (isLoggedIn) fetchUserDevice();
+  }, [initialized, isLoggedIn]);
 
-  const [fontsLoaded] = useFonts({
-    EncodeSansSemiCondensed_700Bold,
-    EncodeSansSemiCondensed_400Regular,
-    EncodeSansSemiCondensed_300Light,
-    EncodeSansSemiCondensed_100Thin,
-  });
 
   return (
     <>
-      {fontsLoaded && deviceData && deviceName ? (
+      { deviceData && deviceName ? (
         <MQTTProvider
           rootPath={deviceName}
           userName={deviceData.username}
@@ -61,8 +46,10 @@ export default function Layout() {
         >
           <Stack screenOptions={{ headerShown: false }} />
         </MQTTProvider>
-      ) : (
+      ) : isLoggedIn ? (
         <SplashScreen />
+      ) : (
+        <Stack screenOptions={{ headerShown: false }} />
       )}
     </>
   )

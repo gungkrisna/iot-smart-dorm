@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import TimerTimePicker from '../TimePicker/TimerTimePicker';
+import ToggleSwitch from "toggle-switch-react-native"
 
 const LEDTimer = ({ hours, minutes, seconds, onUpdateTimer, bottomSheetModalRef }) => {
     const [isTimerOn, setIsTimerOn] = useState(true);
@@ -36,7 +37,7 @@ const LEDTimer = ({ hours, minutes, seconds, onUpdateTimer, bottomSheetModalRef 
         <View style={styles.container}>
             <View style={styles.headingContainer}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>Timer</Text>
-                <Switch value={isTimerOn} onValueChange={handleTimerToggle} />
+                <ToggleSwitch isOn={isTimerOn} onToggle={handleTimerToggle} />
             </View>
             <View pointerEvents={isTimerOn ? 'auto' : 'none'} style={styles.itemContainer} >
                 <TimerTimePicker

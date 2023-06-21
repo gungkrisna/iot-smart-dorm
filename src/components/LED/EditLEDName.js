@@ -1,12 +1,14 @@
 import { BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { setLedName } from '../../store/auth';
 
-const EditLEDName = ({ledName, onUpdateLEDName, bottomSheetModalRef}) => {
+const EditLEDName = ({ledIndex, ledName, onUpdateLedName, bottomSheetModalRef}) => {
     const [newName, setNewName] = useState(ledName);
 
     const handleSave = () => {
-        onUpdateLEDName(newName);
+        setLedName(ledIndex, newName);
+        onUpdateLedName(newName);
         bottomSheetModalRef.current?.close();
     }
 

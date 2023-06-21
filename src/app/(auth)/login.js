@@ -1,5 +1,5 @@
 import { Text, View, TextInput, StyleSheet, Alert } from "react-native";
-import { AuthStore, appSignIn } from "../../store/auth";
+import { AuthStore, appSignIn, retrieveUserDevice } from "../../store/auth";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 
@@ -38,7 +38,16 @@ export default function LogIn() {
         onPress={async () => {
           const resp = await appSignIn(emailRef.current, passwordRef.current);
           if (resp?.user) {
-            router.replace("/(tabs)/home");
+            const { success } = await retrieveUserDevice(resp?.user)
+            if(success) {
+              AuthStore.update((store) => {
+                store.user = resp?.user;
+                store.isLoggedIn = true;
+              });
+              router.replace("/(tabs)/home");
+            } else {
+              router.replace("/mqtt-setup");
+            }
           } else {
             console.log(resp.error)
             Alert.alert("Login Error", resp.error?.message)
@@ -49,9 +58,6 @@ export default function LogIn() {
       </Text>
       <Text
         onPress={() => {
-          AuthStore.update((s) => {
-            s.isLoggedIn = true;
-          });
           router.push("/create-account");
         }}
       >

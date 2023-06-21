@@ -73,23 +73,19 @@ export default function CreateAccount() {
             lastNameRef.current
           );
           if (resp?.user) {
-            router.replace("/(tabs)/home");
+            router.replace("/(auth)/mqtt-setup");
           } else {
-            console.log(resp.error);
             Alert.alert("Sign Up Error", resp.error?.message);
           }
         }}
       >
         <Button>
-          SAVE NEW USER
+          Register
         </Button>
       </Pressable>
 
       <Text
         onPress={() => {
-          AuthStore.update((s) => {
-            s.isLoggedIn = false;
-          });
           router.back();
         }}
       >

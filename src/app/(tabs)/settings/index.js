@@ -1,16 +1,16 @@
 import { Redirect, Stack, useRouter } from "expo-router";
-import { Button, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Button, Text, View } from "react-native";
 import { AuthStore, appSignOut } from "../../../store/auth";
 
-const Tab2Index = () => {
+const Tab3Index = () => {
   const router = useRouter();
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Stack.Screen options={{ headerShown: true, title: "Settings" }} />
-      <Text style={{ fontFamily: "EncodeSansSemiCondensed_400Regular" }}>
+      <Text>
         {AuthStore.getRawState().user?.email}
       </Text>
-      <Text style={{ fontFamily: "EncodeSansSemiCondensed_700Bold" }}>
+      <Text>
         {AuthStore.getRawState().user?.displayName}
       </Text>
       <Button
@@ -25,33 +25,7 @@ const Tab2Index = () => {
         }}
         title="LOGOUT"
       />
-
-      <Pressable
-        onPress={() => {
-          alert("pressed");
-        }}
-        style={({ pressed }) => [
-          { backgroundColor: pressed ? "#920" : "#818" },
-          {
-            borderColor: "#920",
-            borderWidth: 1,
-            borderStyle: "solid",
-            borderRadius: 8,
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-          },
-        ]}
-      >
-        <Text
-          style={{
-            fontFamily: "EncodeSansSemiCondensed_700Bold",
-            color: "white",
-          }}
-        >
-          Button
-        </Text>
-      </Pressable>
     </View>
   );
 };
-export default Tab2Index;
+export default Tab3Index;

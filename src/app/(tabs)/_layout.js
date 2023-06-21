@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Feather, FontAwesome5 } from '@expo/vector-icons';
+import { Feather, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
 const TabsLayout = () => {
   return (
@@ -21,6 +21,12 @@ const TabsLayout = () => {
         name="home"
         options={{
           tabBarIcon: ({ focused }) => <Feather name="home" color={focused ? 'rgb(1, 31, 75)' : '#b0b3b8'} size={24}/>,
+        }}
+      />
+      <Tabs.Screen
+        name="automation"
+        options={{
+          tabBarIcon: ({ focused }) => <Ionicons name="ios-checkbox-outline" color={focused ? 'rgb(1, 31, 75)' : '#b0b3b8'} size={26}/>,
         }}
       />
       <Tabs.Screen
